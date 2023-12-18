@@ -7,6 +7,9 @@ type Vehicle struct {
 	Type      string
 	Brand     string
 	BuildDate string
+
+  LastLatitude float64
+  LastLongitude float64
 }
 
 func (v *Vehicle) Publish(publisher *kafka.Publisher) error {
