@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"time"
+
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
 )
@@ -27,6 +29,7 @@ func (v *Vehicle) Publish(
 			if count == 0 {
 				return err
 			}
+			time.Sleep(500 * time.Millisecond)
 		} else {
 			break
 		}
