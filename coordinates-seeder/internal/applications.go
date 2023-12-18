@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"coordinates-seeder/internal/pkg/config"
@@ -16,7 +16,7 @@ type Application struct {
 	pub *kafka.KafkaPublisher
 }
 
-func setup() *Application {
+func Setup() *Application {
 	// setup config
 	cfg, err := config.LoadConfig("./")
 	if err != nil {
@@ -60,4 +60,6 @@ func (a *Application) GetPublisher() *kafka.KafkaPublisher {
 	return a.pub
 }
 
-func (a *Application) Run() {}
+func (a *Application) Run() error {
+  return nil
+}

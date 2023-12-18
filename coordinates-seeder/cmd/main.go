@@ -1,6 +1,7 @@
 package main
 
 import (
+	app "coordinates-seeder/internal"
 	"log"
 	"time"
 
@@ -9,7 +10,8 @@ import (
 )
 
 func main() {
-  // Run app here
+  app := app.Setup()
+  app.Run()
 }
 
 // nolint:unused
