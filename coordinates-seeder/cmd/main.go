@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-  app := app.Setup()
-  app.Run()
+	app := app.Setup()
+	app.Run()
 }
 
 // nolint:unused

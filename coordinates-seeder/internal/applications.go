@@ -5,6 +5,7 @@ import (
 	"coordinates-seeder/internal/pkg/config"
 	"coordinates-seeder/internal/pkg/db"
 	"coordinates-seeder/internal/pkg/kafka"
+	"coordinates-seeder/internal/pkg/mux"
 	"errors"
 	"log"
 	"net/http"
@@ -12,14 +13,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
 type Application struct {
-	mux *fiber.App
-	db  *sqlx.DB
-	pub *kafka.KafkaPublisher
+	server *mux.FiberServer
+	db     *sqlx.DB
+	pub    *kafka.KafkaPublisher
 }
 
 func Setup() *Application {
@@ -30,10 +30,7 @@ func Setup() *Application {
 	}
 
 	// setup mux
-	mux := fiber.New(fiber.Config{
-		Prefork:       true,
-		StrictRouting: true,
-	})
+	svr := mux.NewFiberServerWithConfig(*cfg)
 
 	// setup db
 	db, err := db.New(*cfg)
@@ -48,14 +45,14 @@ func Setup() *Application {
 	}
 
 	return &Application{
-		mux: mux,
-		db:  db,
-		pub: pub,
+		server: svr,
+		db:     db,
+		pub:    pub,
 	}
 }
 
-func (a *Application) GetMux() *fiber.App {
-	return a.mux
+func (a *Application) GetServer() *mux.FiberServer {
+	return a.server
 }
 
 func (a *Application) GetDB() *sqlx.DB {
@@ -67,14 +64,12 @@ func (a *Application) GetPublisher() *kafka.KafkaPublisher {
 }
 
 func (a *Application) Run() {
-	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// Initializing the server in a goroutine so that
-	// it won't block the graceful shutdown handling below
+
 	go func() {
-		if err := a.GetMux().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
+		if err := a.GetServer().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
@@ -86,8 +81,7 @@ func (a *Application) Run() {
 	stop()
 	log.Println("shutting down gracefully, press Ctrl+C again to force")
 
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
+  // 5 second teardown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
