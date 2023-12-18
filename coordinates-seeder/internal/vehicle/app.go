@@ -1,16 +1,16 @@
-package truck
+package vehicle
 
 import "github.com/jmoiron/sqlx"
 
 type TruckApp struct {
 	topic      string
-	repository ITruckRepository
+	repository IVehicleRepository
 }
 
-func NewTruckApp(topicName string, db *sqlx.DB) *TruckApp {
+func NewVehicleApp(topicName string, db *sqlx.DB) *TruckApp {
 	return &TruckApp{
 		topic:      topicName,
-		repository: NewTruckRepository(db),
+		repository: NewVehicleRepository(db),
 	}
 }
 
