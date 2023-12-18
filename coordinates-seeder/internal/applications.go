@@ -1,9 +1,9 @@
 package main
 
 import (
-	kafka "coordinates-seeder/internal/pkg"
 	"coordinates-seeder/internal/pkg/config"
 	"coordinates-seeder/internal/pkg/db"
+	"coordinates-seeder/internal/pkg/kafka"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +17,6 @@ type Application struct {
 }
 
 func setup() *Application {
-
 	// setup config
 	cfg, err := config.LoadConfig("./")
 	if err != nil {
@@ -58,7 +57,7 @@ func (a *Application) GetDB() *sqlx.DB {
 }
 
 func (a *Application) GetPublisher() *kafka.KafkaPublisher {
-  return a.pub
+	return a.pub
 }
 
 func (a *Application) Run() {}
