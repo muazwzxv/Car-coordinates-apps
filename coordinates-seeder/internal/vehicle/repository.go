@@ -4,7 +4,7 @@ import "github.com/jmoiron/sqlx"
 
 
 type IVehicleRepository interface {
-
+  GetAllVehicle() ([]Vehicle, error)
 }
 
 type VehicleRepository struct {
@@ -19,4 +19,6 @@ func NewVehicleRepository(db *sqlx.DB) *VehicleRepository {
 	}
 }
 
-func (r *VehicleRepository) GetAllTruck() {}
+func (r *VehicleRepository) GetAllVehicle() ([]Vehicle, error) {
+  return nil, nil
+}
