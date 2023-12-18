@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"coordinates-seeder/internal/pkg/config"
+
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
 )
@@ -9,11 +11,11 @@ type KafkaPublisher struct {
 	Publisher *kafka.Publisher
 }
 
-func New() (*KafkaPublisher, error) {
+func NewAppPublisher(cfg config.Config) (*KafkaPublisher, error) {
 	publisher, err := kafka.NewPublisher(
 		kafka.PublisherConfig{
 			Brokers: []string{
-				"localhost:9092",
+				cfg.Broker,
 			},
 			OTELEnabled: true,
 			Marshaler:   kafka.DefaultMarshaler{},

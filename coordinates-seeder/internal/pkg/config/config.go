@@ -11,7 +11,8 @@ type Config struct {
 	DBDriver string `mapstructure:"DB_DRIVER"`
 	DBSource string `mapstructure:"DB_SOURCE"`
 
-	Topic    string `mapstructure:"TOPIC"`
+	Broker string `mapstructure:"BROKER"`
+	Topic  string `mapstructure:"TOPIC"`
 }
 
 // getEnvKeys takes the `mapstructure` tag value from all fields in the Config struct.
