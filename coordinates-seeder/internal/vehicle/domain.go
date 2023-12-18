@@ -1,6 +1,9 @@
 package vehicle
 
-import "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+import (
+	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+	"github.com/ThreeDotsLabs/watermill/message"
+)
 
 type Vehicle struct {
 	Name      string
@@ -8,10 +11,26 @@ type Vehicle struct {
 	Brand     string
 	BuildDate string
 
-  LastLatitude float64
-  LastLongitude float64
+	LastLatitude  float64
+	LastLongitude float64
 }
 
-func (v *Vehicle) Publish(publisher *kafka.Publisher) error {
-  return nil
+func (v *Vehicle) Publish(
+	publisher *kafka.Publisher,
+	msg *message.Message,
+	topic string,
+) error {
+	count := 3
+	for {
+		if err := publisher.Publish(topic, msg); err != nil {
+			count--
+			if count == 0 {
+				return err
+			}
+		} else {
+			break
+		}
+	}
+
+	return nil
 }
