@@ -23,6 +23,7 @@ func NewAppPublisher(cfg config.Config) (*KafkaPublisher, error) {
 		watermill.NewStdLogger(true, true),
 	)
 
+
   if err != nil {
     return nil, err
   }

@@ -50,9 +50,10 @@ func Setup() *Application {
 		server: svr,
 		db:     db,
 		pub:    pub,
+		cfg:    cfg,
 	}
 
-  app.setupRoutes()
+	app.setupRoutes()
 
 	return app
 }
@@ -75,17 +76,16 @@ func (a *Application) getPublisher() *kafka.KafkaPublisher {
 
 func (a *Application) setupRoutes() {
 	server := a.getServer()
-  cfg := a.getConfig()
-
+	cfg := a.getConfig()
 	mux := server.GetMux()
 
 	// setup application module
-  vehicleApp := vehicle.NewVehicleApp(cfg.Topic, a.db, a.getPublisher().Publisher)
+	vehicleApp := vehicle.NewVehicleApp(cfg.Topic, a.getDB(), a.getPublisher().Publisher)
 
-  v1 := mux.Group("/api/v1")
-  {
-    v1.Post("/vehicle", vehicleApp.RegisterVehicle)
-  }
+	v1 := mux.Group("/api/v1")
+	{
+		v1.Post("/vehicle", vehicleApp.RegisterVehicle)
+	}
 }
 
 func (a *Application) Run() {
@@ -93,6 +93,7 @@ func (a *Application) Run() {
 	defer stop()
 
 	go func() {
+    log.Println("starting application")
 		if err := a.getServer().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
