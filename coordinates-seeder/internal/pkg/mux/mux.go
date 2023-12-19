@@ -51,6 +51,6 @@ func (s FiberServer) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s FiberServer) GetMux() *fiber.App {
+func (s *FiberServer) GetMux() *fiber.App {
 	return s.mux
 }

@@ -6,6 +6,7 @@ import (
 	"coordinates-seeder/internal/pkg/db"
 	"coordinates-seeder/internal/pkg/kafka"
 	"coordinates-seeder/internal/pkg/mux"
+	"coordinates-seeder/internal/vehicle"
 	"errors"
 	"log"
 	"net/http"
@@ -20,6 +21,7 @@ type Application struct {
 	server *mux.FiberServer
 	db     *sqlx.DB
 	pub    *kafka.KafkaPublisher
+	cfg    *config.Config
 }
 
 func Setup() *Application {
@@ -44,32 +46,54 @@ func Setup() *Application {
 		log.Fatal(err)
 	}
 
-	return &Application{
+	app := &Application{
 		server: svr,
 		db:     db,
 		pub:    pub,
 	}
+
+  app.setupRoutes()
+
+	return app
 }
 
-func (a *Application) GetServer() *mux.FiberServer {
+func (a *Application) getConfig() *config.Config {
+	return a.cfg
+}
+
+func (a *Application) getServer() *mux.FiberServer {
 	return a.server
 }
 
-func (a *Application) GetDB() *sqlx.DB {
+func (a *Application) getDB() *sqlx.DB {
 	return a.db
 }
 
-func (a *Application) GetPublisher() *kafka.KafkaPublisher {
+func (a *Application) getPublisher() *kafka.KafkaPublisher {
 	return a.pub
+}
+
+func (a *Application) setupRoutes() {
+	server := a.getServer()
+  cfg := a.getConfig()
+
+	mux := server.GetMux()
+
+	// setup application module
+  vehicleApp := vehicle.NewVehicleApp(cfg.Topic, a.db, a.getPublisher().Publisher)
+
+  v1 := mux.Group("/api/v1")
+  {
+    v1.Post("/vehicle", vehicleApp.RegisterVehicle)
+  }
 }
 
 func (a *Application) Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-
 	go func() {
-		if err := a.GetServer().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
+		if err := a.getServer().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
@@ -81,7 +105,7 @@ func (a *Application) Run() {
 	stop()
 	log.Println("shutting down gracefully, press Ctrl+C again to force")
 
-  // 5 second teardown
+	// 5 second teardown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
