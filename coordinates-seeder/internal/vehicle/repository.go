@@ -13,6 +13,7 @@ const (
 
 type IVehicleRepository interface {
 	GetAllVehicle() ([]Vehicle, error)
+  RegisterVehicleData(context.Context, *RegisterVehicleRequest) error
 }
 
 type VehicleRepository struct {
@@ -27,7 +28,7 @@ func NewVehicleRepository(db *sqlx.DB) *VehicleRepository {
 	}
 }
 
-func (r *VehicleRepository) RegisterVehicleData(ctx context.Context, req *Vehicle) error {
+func (r *VehicleRepository) RegisterVehicleData(ctx context.Context, req *RegisterVehicleRequest) error {
 	query := `
     INSERT INTO %s
       (name, type, brand, build_date)
