@@ -11,7 +11,7 @@ type Config struct {
 	DBDriver string `mapstructure:"DB_DRIVER"`
 	DBSource string `mapstructure:"DB_SOURCE"`
 
-	ServerAddress string `mapstructure:"ADDRESS"`
+	ServerAddress string `mapstructure:"APP_ADDRESS"`
 	Broker        string `mapstructure:"BROKER"`
 	Topic         string `mapstructure:"TOPIC"`
 }

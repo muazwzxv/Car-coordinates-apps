@@ -20,9 +20,6 @@ type FiberServer struct {
 
 func NewFiberServerWithConfig(cfg config.Config) *FiberServer {
 	app := fiber.New(fiber.Config{
-		Prefork:       false,
-		CaseSensitive: true,
-		StrictRouting: true,
 		ReadTimeout:   60 * time.Second,
 		WriteTimeout:  60 * time.Second,
 	})

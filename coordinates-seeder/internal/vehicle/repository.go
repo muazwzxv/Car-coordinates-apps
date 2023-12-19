@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	TableVehicles = ""
+	TableVehicles = "vehicle"
 )
 
 type IVehicleRepository interface {
@@ -31,15 +31,17 @@ func NewVehicleRepository(db *sqlx.DB) *VehicleRepository {
 func (r *VehicleRepository) RegisterVehicleData(ctx context.Context, req *RegisterVehicleRequest) error {
 	query := `
     INSERT INTO %s
-      (name, type, brand, build_date)
-    VALUE
-      ($1, $2, $3, $4)`
+      (name, type, brand, build_date, last_longitude, last_latitude)
+    VALUES
+      ($1, $2, $3, $4, $5, $6)`
 
 	_, err := r.db.ExecContext(ctx, fmt.Sprintf(query, TableVehicles),
 		req.Name,
 		req.Type,
 		req.Brand,
 		req.BuildDate,
+    0, // hack, set as 0 first
+    0, // hack, set as 0 first
 	)
 
 	if err != nil {

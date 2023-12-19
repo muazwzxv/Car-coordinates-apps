@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -84,7 +85,7 @@ func (a *Application) setupRoutes() {
 
 	v1 := mux.Group("/api/v1")
 	{
-		v1.Post("/vehicle", vehicleApp.RegisterVehicle)
+		v1.Post("/register-vehicle", vehicleApp.RegisterVehicle)
 	}
 }
 
@@ -93,7 +94,8 @@ func (a *Application) Run() {
 	defer stop()
 
 	go func() {
-    log.Println("starting application")
+		port := os.Getenv("PORT")
+		log.Printf("starting application on port %s", port)
 		if err := a.getServer().Start(); err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}

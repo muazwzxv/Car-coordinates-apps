@@ -22,7 +22,7 @@ func ApplicationError(errs ErrorDetails) map[string]ErrorDetails {
 
 func SimpleErrorResponse(err error) map[string]any {
 	return map[string]any{
-		"message": err,
+		"error": err,
 	}
 }
 

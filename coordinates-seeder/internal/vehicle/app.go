@@ -38,8 +38,7 @@ func (t *TruckApp) RegisterVehicle(ctx *fiber.Ctx) error {
 
   err := t.repository.RegisterVehicleData(ctx.UserContext(), &req)
   if err != nil {
-    return ctx.Status(http.StatusInternalServerError).
-      JSON(errorHelper.SimpleErrorResponse(errorHelper.ErrInternalServer))
+    return ctx.SendStatus(http.StatusInternalServerError)
   }
 
 	return ctx.SendStatus(http.StatusCreated)
