@@ -15,7 +15,7 @@ type RegisterVehicleRequest struct {
 	BuildDate string `json:"build_date"`
 }
 
-type Vehicle struct {
+type VehicleDomain struct {
 	Name      string
 	Type      string
 	Brand     string
@@ -26,7 +26,10 @@ type Vehicle struct {
 }
 
 var VehicleType = map[string]bool{
-	"CAR": true,
+	"CAR":       true,
+	"LORRY":     true,
+	"MOTORBIKE": true,
+	"VAN":       true,
 }
 
 func (v *RegisterVehicleRequest) ValidateRegisterRequest() []errorHelper.ErrorDetail {
@@ -54,7 +57,7 @@ func (v *RegisterVehicleRequest) ValidateRegisterRequest() []errorHelper.ErrorDe
 	return errs
 }
 
-func (v *Vehicle) Publish(
+func (v *VehicleDomain) Publish(
 	publisher *kafka.Publisher,
 	msg *message.Message,
 	topic string,

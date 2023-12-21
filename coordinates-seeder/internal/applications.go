@@ -86,6 +86,7 @@ func (a *Application) setupRoutes() {
 	v1 := mux.Group("/api/v1")
 	{
 		v1.Post("/register-vehicle", vehicleApp.RegisterVehicle)
+    v1.Post("/start-seed", vehicleApp.StartSeeding)
 	}
 }
 
