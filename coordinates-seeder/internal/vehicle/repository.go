@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -13,6 +14,7 @@ const (
 )
 
 type vehicle struct {
+	id          uint64 `db:"id"`
 	name        string `db:"name"`
 	vehicleType string `db:"type"`
 	brand       string `db:"brand"`
@@ -25,6 +27,7 @@ type vehicle struct {
 type IVehicleRepository interface {
 	GetAllVehicle(context.Context) ([]*VehicleDomain, error)
 	RegisterVehicleData(context.Context, *RegisterVehicleRequest) error
+	UpdateLatLonState(context.Context, *VehicleDomain) error
 }
 
 type VehicleRepository struct {
@@ -64,6 +67,7 @@ func (r *VehicleRepository) RegisterVehicleData(ctx context.Context, req *Regist
 func (r *VehicleRepository) GetAllVehicle(ctx context.Context) ([]*VehicleDomain, error) {
 	query := `
     SELECT 
+      id,
       name, 
       type, 
       brand, 
@@ -80,29 +84,46 @@ func (r *VehicleRepository) GetAllVehicle(ctx context.Context) ([]*VehicleDomain
 	}
 
 	for rows.Next() {
-		vehicle := &vehicle{}
-		if err := rows.StructScan(vehicle); err != nil {
+		var vehicle vehicle
+		if err := rows.Scan(&vehicle.id, &vehicle.name, &vehicle.vehicleType, &vehicle.brand, &vehicle.buildDate, &vehicle.lastLatitude, &vehicle.lastLongitude); err != nil {
+			log.Println(err)
 			return nil, errors.New("scanning error")
 		}
-    vehicles = append(vehicles, vehicle)
+		vehicles = append(vehicles, &vehicle)
 	}
 
 	return convertToDomainVehicle(vehicles), nil
 }
 
 func convertToDomainVehicle(vehicles []*vehicle) []*VehicleDomain {
-  domainVehicles := make([]*VehicleDomain, 0)
+	domainVehicles := make([]*VehicleDomain, 0)
 
-  for _, vehicle := range vehicles {
-    domainVehicles = append(domainVehicles, &VehicleDomain{
-      Name: vehicle.name,
-      Type: vehicle.vehicleType,
-      Brand: vehicle.brand,
-      BuildDate: vehicle.buildDate,
-      LastLatitude: vehicle.lastLatitude,
-      LastLongitude: vehicle.lastLongitude,
-    })
-  }
+	for _, vehicle := range vehicles {
+		domainVehicles = append(domainVehicles, &VehicleDomain{
+			ID:            vehicle.id,
+			Name:          vehicle.name,
+			Type:          vehicle.vehicleType,
+			Brand:         vehicle.brand,
+			BuildDate:     vehicle.buildDate,
+			LastLatitude:  vehicle.lastLatitude,
+			LastLongitude: vehicle.lastLongitude,
+		})
+	}
 
-  return domainVehicles
+	return domainVehicles
+}
+
+func (r *VehicleRepository) UpdateLatLonState(ctx context.Context, req *VehicleDomain) error {
+	query := `
+    UPDATE %s
+    SET 
+      last_latitude = $1,
+      last_longitude = $2
+    WHERE id = $3`
+
+	_, err := r.db.ExecContext(ctx, fmt.Sprintf(query, TableVehicles), req.LastLatitude, req.LastLongitude, req.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

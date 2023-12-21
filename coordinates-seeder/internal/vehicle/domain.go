@@ -16,6 +16,7 @@ type RegisterVehicleRequest struct {
 }
 
 type VehicleDomain struct {
+	ID        uint64
 	Name      string
 	Type      string
 	Brand     string

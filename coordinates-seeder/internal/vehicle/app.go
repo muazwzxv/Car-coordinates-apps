@@ -3,13 +3,16 @@ package vehicle
 import (
 	"context"
 	"coordinates-seeder/internal/pkg/errorHelper"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
@@ -112,7 +115,8 @@ func (t *TruckApp) StartSeeding(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	go t.startBackgroundSeed(ctx.UserContext(), vehicles)
+  newCtx := context.Background()
+	go t.startBackgroundSeed(newCtx, vehicles)
 
 	return ctx.SendStatus(201)
 }
@@ -127,22 +131,68 @@ func (t *TruckApp) startBackgroundSeed(ctx context.Context, vehicles []*VehicleD
 		if !ok {
 			log.Println("strategy does not exist")
 		}
+		log.Printf("Seeding for vehicle id: %d", vehicle.ID)
 
-    wg.Add(1)
-		go t.publishLocationEvents(move, vehicle)
+		wg.Add(1)
+		go t.publishLocationEvents(&wg, move, vehicle)
 	}
 
-  wg.Wait()
+  // blocking
+	wg.Wait()
+
+	log.Println("Finish moving coordinates")
+
+  log.Println("Storing the current Lat lon state into database")
+  for _, vehicle := range vehicles {
+    err := t.repository.UpdateLatLonState(ctx, vehicle)
+    log.Println(err)
+  }
+
+  log.Println("Background job finished")
+
 }
 
 // nolint:unused
-func (t *TruckApp) publishLocationEvents(move Move, vehicle *VehicleDomain) {
+func (t *TruckApp) publishLocationEvents(wg *sync.WaitGroup, move Move, vehicle *VehicleDomain) {
+	defer wg.Done()
 	totalMove := 100
 
-	for i := 0; i == totalMove; i++ {
-		// Move based on strategy
-		log.Println("Lmaoo")
+	latitudeNoChange := !move.LatitudeIncrease && !move.LatitudeDecrease
+	longitudeNoChange := !move.LongitudeIncrease && !move.LongitudeDecrease
 
-		time.Sleep(500 * time.Millisecond)
+	for i := 0; i < totalMove; i++ {
+		log.Printf("seeding attempt id: %d, move: %d", vehicle.ID, i)
+		if !latitudeNoChange {
+			if move.LatitudeDecrease {
+				vehicle.LastLatitude -= 10.55
+			}
+
+			if move.LatitudeIncrease {
+				vehicle.LastLatitude += 20.65
+			}
+		}
+
+		if !longitudeNoChange {
+			if move.LongitudeDecrease {
+				vehicle.LastLongitude -= 16.43004
+			}
+
+			if move.LongitudeIncrease {
+				vehicle.LastLongitude += 24.2223
+			}
+		}
+
+		payloadBytes, _ := json.Marshal(vehicle)
+		msg := message.NewMessage(watermill.NewUUID(), payloadBytes)
+
+		for j := 0; j < 2; j++ {
+			err := vehicle.Publish(t.publisher, msg, t.topic)
+			if err != nil {
+				continue
+			}
+			break
+		}
+
+		time.Sleep(200 * time.Millisecond)
 	}
 }
